@@ -20,14 +20,27 @@ define(function(require, exports, module) {
         paginated: true
     });
 
+    var pics = [
+        'boat',
+        'cat',
+        'cow',
+        'fire',
+        'hen',
+        'horse',
+        'monkey',
+        'mouse',
+        'snake'
+    ]
+
     var cards = [];
     var cols = ['red', 'green', 'blue'];
-    for (var i=0; i<cols.length; i++) {
+    for (var i=0; i<pics.length; i++) {
         var col = cols[i];
         var card = new CardView({
             idx: i,
             col: col, 
             view: scrollview,
+            imgUrl: '/content/images/' + pics[i] + '.png',
             words: ['one', 'two', 'three']
         })
         cards.push(card)

@@ -24,3 +24,7 @@ html {
 	text-align: left;
 	color: white;
 }
+
+.bigPic {
+	z-index: 20;
+}

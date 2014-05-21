@@ -4,6 +4,7 @@ define(function(require, exports, module) {
     var Surface = require('famous/core/Surface');
     var Transform = require('famous/core/Transform');
     var StateModifier = require('famous/modifiers/StateModifier');
+    var ImageSurface = require('famous/surfaces/ImageSurface');
 
     /*
      * @name CardView
@@ -11,16 +12,16 @@ define(function(require, exports, module) {
      * @description
      */
 
-    function _createBackground() {
-        var background = new Surface({
-            properties: {
-                backgroundColor: '#FFFFF5',
-                boxShadow: '0 10px 20px -5px rgba(0, 0, 0, 0.5)'
-            }
-        });
+    // function _createBackground() {
+    //     var background = new Surface({
+    //         properties: {
+    //             backgroundColor: '#FFFFF5',
+    //             boxShadow: '0 10px 20px -5px rgba(0, 0, 0, 0.5)'
+    //         }
+    //     });
 
-        this.mainNode.add(background);
-    }
+    //     this.mainNode.add(background);
+    // }
 
 
     // function _createMainText(obj) {
@@ -28,6 +29,25 @@ define(function(require, exports, module) {
     //         content: this.obj.txt
     //     })
     // }
+
+    function addImage(base, obj) {
+        var mod = new StateModifier({
+            origin: [0.5, 0.5],
+            align: [0.5, 0.5],
+            // transform: Transform.translate( word.x, word.y, word.z)
+        });
+
+        var node = new ImageSurface({
+            content: obj.imgUrl,
+            size: [true, true],
+            classes: ['bigPic'],
+            properties: {
+                pointerEvents: 'none',       // so we dont have to pipe in the surface
+            }
+        })
+        base.add(mod).add(node);
+        // node.pipe(obj.view);
+    }
 
     function addTextNode(base, obj, word) {
 
@@ -44,6 +64,7 @@ define(function(require, exports, module) {
             classes: ['bigWord']
         })
 
+        obj.mod = mod;
         base.add(mod).add(node);
         node.pipe(obj.view);
     }
@@ -80,7 +101,9 @@ define(function(require, exports, module) {
              }
         });
         
+        addImage(this, obj);
         addOptions(this, obj);
+
 
         surf.pipe(obj.view);  // surface gets events, send them to parent view to scroll with
         this.add(surf);
