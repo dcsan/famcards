@@ -25,8 +25,10 @@ define(function(require, exports, module) {
     for (var i=0; i<cols.length; i++) {
         var col = cols[i];
         var card = new CardView({
+            idx: i,
             col: col, 
-            view: scrollview
+            view: scrollview,
+            words: ['one', 'two', 'three']
         })
         cards.push(card)
     }

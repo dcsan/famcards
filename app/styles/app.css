@@ -10,3 +10,17 @@ html {
 .divRed {
 	background-color: red;
 }
+
+.bigWord {
+	font-family: sans-serif;
+	font-size: 48px;
+	background-color: black;
+	color: white;
+	z-index: 10;
+}
+
+.cardNum {
+	font-size: 36px;
+	text-align: left;
+	color: white;
+}
