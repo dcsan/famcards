@@ -3,8 +3,28 @@ define(function(require, exports, module) {
     var View = require('famous/core/View');
     var Surface = require('famous/core/Surface');
     var Transform = require('famous/core/Transform');
+
+    var RenderNode = require('famous/core/RenderNode');
+
     var StateModifier = require('famous/modifiers/StateModifier');
+    var Modifier = require('famous/core/Modifier');
+    var Transitionable = require('famous/transitions/Transitionable');
+
     var ImageSurface = require('famous/surfaces/ImageSurface');
+
+    var GenericSync = require("famous/inputs/GenericSync");
+    var MouseSync   = require("famous/inputs/MouseSync");
+    var TouchSync   = require("famous/inputs/TouchSync");
+    var ScrollSync   = require("famous/inputs/ScrollSync");
+
+    // register sync classes globally for later use in GenericSync
+    GenericSync.register({
+        "mouse" : MouseSync,
+        "touch" : TouchSync,
+        "scrollsync": ScrollSync
+    });
+
+
 
     /*
      * @name CardView
@@ -12,29 +32,11 @@ define(function(require, exports, module) {
      * @description
      */
 
-    // function _createBackground() {
-    //     var background = new Surface({
-    //         properties: {
-    //             backgroundColor: '#FFFFF5',
-    //             boxShadow: '0 10px 20px -5px rgba(0, 0, 0, 0.5)'
-    //         }
-    //     });
-
-    //     this.mainNode.add(background);
-    // }
-
-
-    // function _createMainText(obj) {
-    //     var txt = new Surface({
-    //         content: this.obj.txt
-    //     })
-    // }
-
     function addImage(base, obj) {
         var mod = new StateModifier({
             origin: [0.5, 0.5],
-            align: [0.5, 0.5],
-            // transform: Transform.translate( word.x, word.y, word.z)
+            align: [0.5, 0.2],
+            transform: Transform.translate( 0, 0, 0)
         });
 
         var node = new ImageSurface({
@@ -49,6 +51,52 @@ define(function(require, exports, module) {
         // node.pipe(obj.view);
     }
 
+    function addSlices(base, obj) {
+
+        var SCREENWIDTH = window.innerWidth;
+        obj.transitionable = new Transitionable(0);
+
+        var SLICECOUNT = 3;
+        var sliceMod = new Modifier(
+            {
+                transform: function(){
+                    return Transform.translate(obj.transitionable.get(), 0, 0 )
+                }
+            }
+        );
+        var sliceNode = new RenderNode();
+
+        var sliceBase = sliceNode.add(sliceMod);
+
+        for(var i=0; i<SLICECOUNT; i++){
+            var px = (i*50) + SCREENWIDTH/2;
+
+            var mod = new StateModifier({
+                origin: [0, 0],
+                align: [0, 0],
+                transform: Transform.translate( px, 0, 0)
+            });
+
+            var slice = new Surface({
+                content: 'X',
+                pointerEvents: 'none',       // so we dont have to pipe in the surface
+                size: [true, true],
+                classes: ['slice'],
+                // transform: Transform.translate( px, 50, 0)
+            });
+
+            sliceBase.add(mod).add(slice);
+            // sliceBase.add(mod).add(slice);
+            // node.add(mod).add(slice);
+            // node.add(slice);
+        }
+
+        base.add(sliceNode);
+        obj.sliceMod = sliceMod;
+
+    }
+
+
     function addTextNode(base, obj, word) {
 
         var mod = new StateModifier({
@@ -57,38 +105,68 @@ define(function(require, exports, module) {
             transform: Transform.translate( word.x, word.y, word.z)
         });
 
-        var node = new Surface({
+        var surf = new Surface({
             content: word.txt,
-            pointerEvents: 'none',       // so we dont have to pipe in the surface
+            // pointerEvents: 'none',       // so we dont have to pipe in the surface
             size: [true, true],
             classes: ['bigWord']
         })
 
+        surf.on('click', function() {
+            console.log('picked')
+            surf.setProperties({
+                backgroundColor: '#878785'
+            });
+            obj.view.goToNextPage();
+        });
+
         obj.mod = mod;
-        base.add(mod).add(node);
-        node.pipe(obj.view);
+        base.add(mod).add(surf);
+        // surf.pipe(obj.view);
     }
 
     function addOptions(base, obj) {
+        var TOPMARGIN = 100;    // offset text
+        var words = obj.data.words;
+        words.push(obj.data.en);
+        words = _.shuffle(words);
 
-        for(var i=0; i<obj.words.length; i++) {
+        var mags = _.map(words, function(word, ctr) {
+            return {txt: word, flag: ctr}
+            // console.log(word, ctr);
+        });
+
+        console.log(mags);
+
+        for(var i=0; i<mags.length; i++) {
             word = {
-                txt: obj.words[i],
+                txt: words[i],
                 x: 10,
-                y: 100*i,
+                y: (80*i) + TOPMARGIN,
                 z: 0
             }
             addTextNode(base, obj, word)
         }
     }
 
+    // funnel both mouse and touch input into a GenericSync
+    // and only read from the x-displacement
+    // function addSync(base, obj) {
+    //     var sync = new GenericSync(
+    //         ["mouse", "touch"],
+    //         {direction : GenericSync.DIRECTION_X}
+    //     );
+    // }
+
     function CardView(obj) {
         View.apply(this, arguments);
 
-        // this.rootModifier = new StateModifier({
-        //     size: [200, 200]
-        // });
-        // this.mainNode = this.add(this.rootModifier);
+        // funnel both mouse and touch input into a GenericSync
+        // and only read from the x-displacement
+        this.sync = new GenericSync(
+            ["mouse", "touch", 'scrollsync'],
+            {direction : GenericSync.DIRECTION_X}
+        );
 
         surf = new Surface({
              content: 'card:' + obj.idx,
@@ -103,10 +181,36 @@ define(function(require, exports, module) {
         
         addImage(this, obj);
         addOptions(this, obj);
+        addSlices(this, obj);
 
+        surf.pipe(this.sync);
 
-        surf.pipe(obj.view);  // surface gets events, send them to parent view to scroll with
+        this.sync.on('update', moverFunc.bind(this) );
+        this.obj = obj;
+
+        surf.pipe(this._eventInput);
+        this._eventInput.pipe(this._eventOutput);
+        // this._eventInput.on('touchmove', moverFunc )
+
         this.add(surf);
+    }
+
+    function moverFunc(data) {
+        // console.log('moverFunc', data, this);
+        // console.log(data);
+        // this.obj.transitionable.set(data.delta[0]);
+        this.obj.transitionable.set(data.position);
+
+        // this.obj.transitionable.set(100, {
+        //     duration: 2000,
+        //     curve: 'easeInOut'
+        // });
+        // console.log(this.obj.sliceMod.transform);
+        // this.obj.sliceMod.setTransform(
+        //     Transform.translate( px, 0, 0)
+        // )
+        // transform: Transform.translate( px, 0, 0)
+        // console.log("moverFunc", obj.clientX);
     }
 
     CardView.prototype = Object.create(View.prototype);

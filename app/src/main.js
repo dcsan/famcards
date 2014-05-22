@@ -9,9 +9,12 @@ define(function(require, exports, module) {
     var Surface = require('famous/core/Surface');
     var Scrollview = require('famous/views/Scrollview');
 
-    var fullHeight = window.innerHeight;
+    var _ = require('underscore');
 
     var CardView = require('views/CardView');
+
+    var fullHeight = window.innerHeight;
+
 
     // create the main context
     var mainContext = Engine.createContext();
@@ -25,27 +28,87 @@ define(function(require, exports, module) {
         'cat',
         'cow',
         'fire',
-        'hen',
         'horse',
         'monkey',
         'mouse',
         'snake'
     ]
 
+    var data = [
+
+        {
+            en: 'boat',
+            ja: 'ふね',
+            words: ['pig', 'door']
+        },
+
+        {
+            en: 'cat',
+            ja: 'ネコ',
+            words: ['goat', 'snake']
+        },
+
+        {
+            en: 'cow',
+            ja: 'うし',
+            words: ['monkey', 'fire']
+        },
+
+        {
+            en: 'fire',
+            ja: 'かじ',
+            words: ['cow', 'cat']
+        },
+
+        {
+            en: 'horse',
+            ja: 'うま',
+            words: ['boat', 'snake']
+        },
+
+        {
+            en: 'monkey',
+            ja: 'さる',
+            words: ['mouse', 'cat']
+        },
+
+        {
+            en: 'mouse',
+            ja: 'ねずみ',
+            words: ['goat', 'horse']
+        },
+
+        {
+            en: 'snake',
+            ja: 'へび',
+            words: ['pig', 'cat']
+        },
+
+    ]
+
+
     var cards = [];
     var cols = ['red', 'green', 'blue'];
-    for (var i=0; i<pics.length; i++) {
+    for (var i=0; i<data.length; i++) {
+        var item = data[i];
         var col = cols[i];
         var card = new CardView({
             idx: i,
-            col: col, 
+            col: _.sample(cols), 
             view: scrollview,
-            imgUrl: '/content/images/' + pics[i] + '.png',
-            words: ['one', 'two', 'three']
+            data: item,
+            imgUrl: '/content/images/' + item.en + '.png',
+            // words: ['one', 'two', 'three']
         })
-        cards.push(card)
+        // card.pipe()
+
+        card.pipe(scrollview);
+        cards.push(card);
     }
 
+    scrollview.on('pageChange', function() {
+        // debugger;
+    })
     scrollview.sequenceFrom(cards);
 
     mainContext.add(scrollview);
