@@ -42,3 +42,10 @@ html {
 	display: block;
 }
 
+.WRONG {
+	background-color: red;
+}
+
+.RIGHT {
+	background-color: green;
+}

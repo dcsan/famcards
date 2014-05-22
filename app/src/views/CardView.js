@@ -97,16 +97,41 @@ define(function(require, exports, module) {
     }
 
 
-    function addTextNode(base, obj, word) {
+    function showResult(base, obj, mag) {
+
+        if (mag.flag == 2) {
+            scored = "RIGHT";
+        } else {
+            scored = "WRONG";
+        }
 
         var mod = new StateModifier({
             origin: [0, 0],
             align: [0, 0.2],
-            transform: Transform.translate( word.x, word.y, word.z)
+            transform: Transform.translate( 0, 350, 0)
         });
 
         var surf = new Surface({
-            content: word.txt,
+            content: scored,
+            size: [true, true],
+            classes: ['bigWord', scored]
+        })
+
+        console.log('res mag:', mag);
+        base.add(mod).add(surf);
+
+    }
+
+    function addTextNode(base, obj, mag) {
+
+        var mod = new StateModifier({
+            origin: [0, 0],
+            align: [0, 0.2],
+            transform: Transform.translate( mag.x, mag.y, mag.z)
+        });
+
+        var surf = new Surface({
+            content: mag.txt,
             // pointerEvents: 'none',       // so we dont have to pipe in the surface
             size: [true, true],
             classes: ['bigWord']
@@ -117,7 +142,11 @@ define(function(require, exports, module) {
             surf.setProperties({
                 backgroundColor: '#878785'
             });
-            obj.view.goToNextPage();
+            showResult(base, obj, mag);
+            setTimeout(function() {
+                obj.view.goToNextPage()
+            }, 500);
+            
         });
 
         obj.mod = mod;
@@ -129,23 +158,24 @@ define(function(require, exports, module) {
         var TOPMARGIN = 100;    // offset text
         var words = obj.data.words;
         words.push(obj.data.en);
-        words = _.shuffle(words);
 
         var mags = _.map(words, function(word, ctr) {
-            return {txt: word, flag: ctr}
+            return {
+                txt: word, 
+                flag: ctr
+            }
             // console.log(word, ctr);
         });
 
-        console.log(mags);
+        mags = _.shuffle(mags);
+        // console.log(mags);
 
         for(var i=0; i<mags.length; i++) {
-            word = {
-                txt: words[i],
-                x: 10,
-                y: (80*i) + TOPMARGIN,
-                z: 0
-            }
-            addTextNode(base, obj, word)
+            mag = mags[i]
+            mag.x = 10;
+            mag.y = (80*i) + TOPMARGIN;
+            mag.z = 0;
+            addTextNode(base, obj, mag);
         }
     }
 
@@ -199,7 +229,8 @@ define(function(require, exports, module) {
         // console.log('moverFunc', data, this);
         // console.log(data);
         // this.obj.transitionable.set(data.delta[0]);
-        this.obj.transitionable.set(data.position);
+        var PLAX = 0.5;
+        this.obj.transitionable.set(data.position * PLAX);
 
         // this.obj.transitionable.set(100, {
         //     duration: 2000,
