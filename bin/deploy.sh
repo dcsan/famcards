@@ -15,4 +15,4 @@ function upload {
 # grunt build
 
 upload $DISTDIR
-open http://spellchain.pikkle.com/dev/famcards/$DISTDIR
+open http://spellchain.pikkle.com/dev/famcards

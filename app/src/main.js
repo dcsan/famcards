@@ -117,6 +117,8 @@ define(function(require, exports, module) {
             imgUrl: 'content/images/' + item.en + '.png',
             // words: ['one', 'two', 'three']
         })
+
+        console.log('imgUrl', card.imgUrl);
         // card.pipe()
 
         card.pipe(scrollview);
