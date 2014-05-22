@@ -114,7 +114,7 @@ define(function(require, exports, module) {
             col: _.sample(cols), 
             view: scrollview,
             data: item,
-            imgUrl: '/content/images/' + item.en + '.png',
+            imgUrl: 'content/images/' + item.en + '.png',
             // words: ['one', 'two', 'three']
         })
         // card.pipe()
